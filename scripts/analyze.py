@@ -13,7 +13,7 @@ if g1:
         rs = g[k]; out.append(f"| {k[0]} | {k[1]} | {k[2]} | {sorted({r['d_multi'] for r in rs})} | {sorted({r['d_members'] for r in rs})} | {rs[0]['expect_members']} | {rs[0]['members_bytes']} | {rs[0]['offsets_bytes']} |")
     fig, ax = plt.subplots(figsize=(7,4.2))
     ks = [2,4,8,16,32,64]
-    for v, m in [("18.7","fk_insert"),("19rc2","fk_insert")]:
+    for v, m in [(v, "fk_insert") for v in ["18.7","19rc2","19.0"] if (v,"fk_insert",2) in g]:
         ax.plot(ks, [st.median(r["d_members"]/r["episodes"] for r in g[(v,m,k)]) for k in ks], "o-", label=f"{v} measured (FK insert)")
     ax.plot(ks, [k*(k+1)/2-1 for k in ks], "k--", label="k(k+1)/2 - 1")
     ax.set_xscale("log", base=2); ax.set_yscale("log"); ax.set_xlabel("overlapping lockers on one row (k)"); ax.set_ylabel("members per episode")
@@ -39,7 +39,22 @@ if rr:
     for k in sorted(g):
         rs = g[k]; f = lambda s, key: sorted({(r[s][key]//1024 if key=="members_bytes" else r[s][key]) for r in rs if s in r})
         out.append(f"| {k[0]} | {k[1]} | {f('peak','members_bytes')} | {f('after','members_bytes')} | {f('after','oldest_multi')} | {sorted({r['after']['datminmxid']['template0'] for r in rs})} | {f('released','members_bytes')} | {f('released','oldest_multi')} |")
-for name in ["l_limit.jsonl", "x_crossdb.jsonl", "m_mitig.jsonl"]:
+ll = L("l_limit.jsonl")
+if ll:
+    out.append("\n## L members limit (fast-forward to 4,274,017,280; k=64)\n| cell | outcome | members after ff | next offset | members-warnings | writes back after unpin (s) |\n|---|---|---|---|---|---|")
+    for r in ll:
+        evs = {e["ev"]: e for e in r["events"]}
+        oc = "ERROR members limit" if "error" in evs else ("no error" if "no_error" in evs else "?")
+        wb = evs["autovac_wait"]["secs"] if "autovac_wait" in evs else ""
+        out.append(f"| {r['cell']} | {oc} | {r['members_after_ff']} | {r['end']['next_offset']} | {r['log_members_warn_count']} | {wb} |")
+for uf, label in [("u_upgrade.jsonl", "18.7 -> 19rc2"), ("u_upgrade_19_0.jsonl", "18.7 -> 19.0")]:
+    uu = L(uf)
+    if uu:
+        out.append(f"\n## U pg_upgrade {label} (k=64)\n| cell | rc | secs | members before | members after | members bytes before | after | offsets bytes before | after | rows |\n|---|---|---|---|---|---|---|---|---|---|")
+        for r in uu:
+            o, n = r.get("old", {}), r.get("new", {})
+            out.append(f"| {r['cell']} | {r['upgrade_rc']} | {r['upgrade_secs']:.2f} | {o.get('next_offset',0)-1} | {n.get('next_offset',0)-1} | {o.get('members_bytes')} | {n.get('members_bytes')} | {o.get('offsets_bytes')} | {n.get('offsets_bytes')} | {r.get('rows')} |")
+for name in ["x_crossdb.jsonl", "m_mitig.jsonl"]:
     rows = L(name)
     if rows: out.append(f"\n## {name}: {len(rows)} records (see analyze section)")
 open(os.path.join(R, "summary.md"), "w").write("\n".join(out) + "\n"); print("\n".join(out))
@@ -50,12 +65,13 @@ rr = L("r_reclaim.jsonl")
 if rr:
     arms = ["none","vacuum_plain_app","vacuum_freeze_app","vacuumdb_all_freeze","vacuumdb_all_freeze_blocked","autovac","autovac_blocked"]
     labels = ["nothing","VACUUM","VACUUM (FREEZE)","vacuumdb --all\n--freeze","vacuumdb + idle\nlocker","autovacuum","autovacuum +\nidle locker"]
-    fig, ax = plt.subplots(figsize=(9,4.2)); w = 0.38
-    for i, v in enumerate(["18.7","19rc2"]):
+    VS = [v for v in ["18.7","19rc2","19.0"] if any(r["v"]==v for r in rr)]
+    fig, ax = plt.subplots(figsize=(9,4.2)); w = 0.8/len(VS)
+    for i, v in enumerate(VS):
         vals = [st.median(r["after"]["members_bytes"]/1e6 for r in rr if r["arm"]==a and r["v"]==v) for a in arms]
-        ax.bar(np.arange(len(arms)) + (i-0.5)*w, vals, w, label=v)
+        ax.bar(np.arange(len(arms)) + (i-(len(VS)-1)/2)*w, vals, w, label=v)
     ax.set_xticks(range(len(arms))); ax.set_xticklabels(labels, fontsize=8); ax.set_ylabel("pg_multixact/members after (MB, 10^6 B)")
-    ax.set_title("Only autovacuum kept member space small; nothing freed it while a locker was idle"); ax.legend(); fig.tight_layout(); fig.savefig(f"{C}/r_reclaim.png", dpi=150)
+    ax.set_title("Only autovacuum kept member space small; nothing freed it while a locker was idle"); ax.set_ylim(0, 13); ax.legend(loc="upper center", ncol=len(VS)); fig.tight_layout(); fig.savefig(f"{C}/r_reclaim.png", dpi=150)
 xd = L("x_crossdb.jsonl")
 if xd:
     arms = ["control","other_db_locker","other_db_xid_only","other_db_rr_snapshot","other_db_locker_iits10s"]
@@ -82,3 +98,11 @@ if mm:
             rs = [r for r in mm if r["arm"]==a and r["v"]==v]; m = [r["members_per_row"] for r in rs]
             out2.append(f"| {a} | {v} | {st.median(m):.2f} [{min(m):.2f}-{max(m):.2f}] | {round(st.median(r['rows_per_s'] for r in rs))} | {round(st.median(r['members_per_s'] for r in rs))} |")
     open(os.path.join(R, "summary.md"), "a").write("\n".join(out2) + "\n")
+rr19 = L("controls/r19_rerun.jsonl")
+if rr19:
+    n = ["\n## Notes on 19.0 R cells",
+         "- r-19.0-autovac-r3 and r-19.0-autovac_blocked-r1: poll trace has a 462 s / 425 s gap (box suspended mid-poll). Kept in r_reclaim.jsonl, flagged; end states match siblings.",
+         "- Reruns (results/controls/r19_rerun.jsonl, max poll gap 2.1 s):"]
+    for r in rr19:
+        n.append(f"  - {r['cell']}: after members_bytes {r['after']['members_bytes']}, oldestMultiXid {r['after']['oldest_multi']}, released {r.get('released', {}).get('members_bytes', '-')}, wait {r.get('wait_secs', 0):.1f} s")
+    open(os.path.join(R, "summary.md"), "a").write("\n".join(n) + "\n")

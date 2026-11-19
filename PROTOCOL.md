@@ -97,3 +97,9 @@ on-disk bytes of pg_multixact/{members,offsets}, and on 19 pg_get_multixact_stat
 ## Control results summary (2026-11-19 11:50)
 - G2-F medians (members/tx, fsync on vs off): 64/1/5 ms 18.7 58.2 vs 60.7, 19rc2 58.3 vs 60.6; 64/1/0 ms 18.7 20.8 vs 9.6, 19rc2 21.4 vs 9.5.
 - U-C1 no compaction 18->18; U-C0 baseline 1.58-1.62 s; U-C2 amcheck clean; L-C1 vacuumdb rc 0 while pinned and after unpin, writes back 6.2 s after autovacuum processed template0; G2-R 4.53 members/tx.
+
+## 19.0 GA rerun (2026-11-19, 17:36-18:41 TR)
+- 19.0 tarball from ftp.postgresql.org, sha256 a89fd70efbad6a08c7dbed8d4872e3af30170d9e5ca9dc7906523be95b4e692d (matches the published .sha256). Same configure flags; port 55490.
+- First attempt (17:35) failed before configure: the box had no `bzip2` binary after the morning reset, so `tar xjf` could not run. run_19_0.sh now falls back to Python bz2 extraction. No measurement was affected.
+- Subset rerun with the unchanged scripts: G1 (36 cells, seed 20261119), R (21 cells, seed 20261126), L (3 reps, fixed order), U 18.7 -> 19.0 (10,000 episodes x 3 reps -> results/u_upgrade_19_0.jsonl). G2, X, M and the fsync-on control were not rerun (no change in multixact.c / ri_triggers.c between RC2 and 19.0).
+- Not load-gated (same as the original grids). Two R cells (r-19.0-autovac-r3, r-19.0-autovac_blocked-r1) show a 462 s / 425 s gap inside their poll trace: the VM was paused while the agent was idle (logind watchdog aborts in dmesg at each resume; uptime advanced with wall clock, so the uptime-vs-wall rule cannot catch this kind of pause). Both kept and flagged; rerun as results/controls/r19_rerun.jsonl (scripts/rerun_r19.py, max poll gap 2.1 s), same outcomes.

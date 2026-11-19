@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."; ROOT=$PWD; mkdir -p src install; cd src
 U=https://ftp.postgresql.org/pub/source/v$V/postgresql-$V.tar.bz2
 curl -sfO $U; curl -sfO $U.sha256
 sha256sum -c postgresql-$V.tar.bz2.sha256
-rm -rf postgresql-$V; tar xjf postgresql-$V.tar.bz2; cd postgresql-$V
+rm -rf postgresql-$V; if command -v bzip2 >/dev/null; then tar xjf postgresql-$V.tar.bz2; else python3 -c "import tarfile; tarfile.open('postgresql-$V.tar.bz2','r:bz2').extractall()"; fi; cd postgresql-$V
 ./configure --prefix=$ROOT/install/pg-$V --without-readline --without-zlib --without-icu --without-zstd --without-lz4
 make -j"$(nproc)" world-bin
 make install-world-bin   # includes contrib (amcheck is needed by the upgrade control)

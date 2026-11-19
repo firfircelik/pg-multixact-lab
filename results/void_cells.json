@@ -1,15 +1,49 @@
 {
   "void": [
-    {"file": "g2_churn.jsonl", "cell": "g2-18.7-c64-h16-t5-r1", "reason": "ran right after a ~286 s VM suspension; 115,457 tx vs ~240k in sibling reps", "replacement": "controls/g2r.jsonl (g2r-18.7-c64-h16-t5-r1)"}
+    {
+      "file": "g2_churn.jsonl",
+      "cell": "g2-18.7-c64-h16-t5-r1",
+      "reason": "ran right after a ~286 s VM suspension; 115,457 tx vs ~240k in sibling reps",
+      "replacement": "controls/g2r.jsonl (g2r-18.7-c64-h16-t5-r1)"
+    }
   ],
   "flagged": [
-    {"file": "g2_churn.jsonl", "cell": "g2-19rc2-c64-h1-t5-r2", "reason": "about 10% slower than sibling reps; kept, medians reported"}
+    {
+      "file": "g2_churn.jsonl",
+      "cell": "g2-19rc2-c64-h1-t5-r2",
+      "reason": "about 10% slower than sibling reps; kept, medians reported"
+    },
+    {
+      "file": "r_reclaim.jsonl",
+      "cell": "r-19.0-autovac-r3",
+      "reason": "VM paused inside the poll window (462 s gap in trace); end state matches siblings",
+      "rerun": "controls/r19_rerun.jsonl"
+    },
+    {
+      "file": "r_reclaim.jsonl",
+      "cell": "r-19.0-autovac_blocked-r1",
+      "reason": "VM paused inside the poll window (425 s gap in trace); end state matches siblings",
+      "rerun": "controls/r19_rerun.jsonl"
+    }
   ],
   "invalid_fields": [
-    {"file": "r_reclaim.jsonl", "fields": ["autovac_log_lines", "autovac_template0", "warnings"], "reason": "server log was appended across cells (fixed in lab.py later); use datminmxid / oldestMultiXid instead"}
+    {
+      "file": "r_reclaim.jsonl",
+      "fields": [
+        "autovac_log_lines",
+        "autovac_template0",
+        "warnings"
+      ],
+      "reason": "server log was appended across cells (fixed in lab.py later); use datminmxid / oldestMultiXid instead. Applies to the 18.7 and 19rc2 cells only; 19.0 cells ran after the fix."
+    }
   ],
   "discarded_files": [
-    {"file": "discarded/l_limit_attempt1.jsonl", "reason": "first limit attempt: the probe touched the fast-forward-distorted MultiXact 1 row and the run was cut off by a VM reset"}
+    {
+      "file": "discarded/l_limit_attempt1.jsonl",
+      "reason": "first limit attempt: the probe touched the fast-forward-distorted MultiXact 1 row and the run was cut off by a VM reset"
+    }
   ],
-  "resume_markers": [".limit_done: empty marker file used by scripts/chain2.sh to skip the finished limit test"]
+  "resume_markers": [
+    ".limit_done: empty marker file used by scripts/chain2.sh to skip the finished limit test"
+  ]
 }

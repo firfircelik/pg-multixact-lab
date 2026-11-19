@@ -9,3 +9,6 @@
 e87aae032bf07c26f85ac0ed3250998c37621d95f8bd748b31f15b33c45ee995  flex-2.6.4.tar.gz
 63aede5c6d33b6d9b13511cd0be2cac046f2e70fd0a07aa9573a04a82783af96  m4-1.4.19.tar.xz
 dd16fb1d67bfab79a72f5e8390735c49e3e8e70b4945a15ab1f81ddb78658fb3  make-4.4.1.tar.gz
+== 19.0
+a89fd70efbad6a08c7dbed8d4872e3af30170d9e5ca9dc7906523be95b4e692d  postgresql-19.0.tar.bz2
+postgresql-19.0.tar.bz2: OK (2026-11-19, against the published .sha256)
