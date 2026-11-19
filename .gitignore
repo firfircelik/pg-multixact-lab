@@ -1,0 +1,7 @@
+install/
+src/
+scratch/
+logs/
+backups/
+__pycache__/
+*.pyc

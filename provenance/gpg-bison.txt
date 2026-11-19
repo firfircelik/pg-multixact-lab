@@ -1,0 +1,10 @@
+gpg: Signature made Sat Sep 25 12:30:33 2021 +03
+gpg:                using DSA key 7DF84374B1EE1F9764BBE25D0DDCAA3278D5264E
+gpg: Good signature from "Akim Demaille <demaille@enst.fr>" [unknown]
+gpg:                 aka "Akim Demaille <akim@lrde.epita.fr>" [unknown]
+gpg:                 aka "Akim Demaille <akim@epita.fr>" [unknown]
+gpg:                 aka "Akim Demaille <akim@freefriends.org>" [unknown]
+gpg:                 aka "Akim Demaille <akim@gnu.org>" [unknown]
+gpg: WARNING: This key is not certified with a trusted signature!
+gpg:          There is no indication that the signature belongs to the owner.
+Primary key fingerprint: 7DF8 4374 B1EE 1F97 64BB  E25D 0DDC AA32 78D5 264E

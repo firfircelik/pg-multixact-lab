@@ -1,0 +1,6 @@
+gpg: Signature made Sat May  6 23:40:29 2017 +03
+gpg:                using RSA key E4B29C8D64885307
+gpg: Good signature from "Will Estes <westes575@gmail.com>" [unknown]
+gpg: WARNING: This key is not certified with a trusted signature!
+gpg:          There is no indication that the signature belongs to the owner.
+Primary key fingerprint: 56C6 7868 E933 90AA 1039  AD1C E4B2 9C8D 6488 5307
